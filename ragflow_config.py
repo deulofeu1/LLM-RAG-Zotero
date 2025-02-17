@@ -13,11 +13,11 @@ CHUNK_METHOD = "paper"
 rag_object = RAGFlow(api_key=API_KEY, base_url=BASE_URL)
 
 # 3. 获取或创建数据集
-datasets = rag_object.list_datasets(name=DATASET_NAME)
-if datasets:
+try:
+    datasets = rag_object.list_datasets(name=DATASET_NAME)
     dataset = datasets[0]
     print(f"数据集 '{DATASET_NAME}' 已存在，ID: {dataset.id}")
-else:
+except Exception as e:
     dataset = rag_object.create_dataset(
         name=DATASET_NAME, embedding_model=EMBEDDING_MODEL, chunk_method=CHUNK_METHOD
     )
