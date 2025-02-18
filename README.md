@@ -17,3 +17,5 @@ This project integrates the Zotero literature library as an external knowledge b
 - **Incremental Processing**: Users can add new references to their Zotero library, and the system will automatically update the knowledge base without requiring a complete refresh.
 
 - **Automatic Synchronization**: Changes made in the Zotero library are automatically synced with the external knowledge base, keeping the data up-to-date.
+
+- **Executable Application**: After configuration, the application can be run with a single click for ease of use.
