@@ -9,26 +9,32 @@ FOLDER_PATH = "<zotero-file-path>"
 EMBEDDING_MODEL = "text-embedding-nomic-embed-text-v1.5"
 CHUNK_METHOD = "paper"
 
-# 2. 初始化 RAGFlow 客户端
-rag_object = RAGFlow(api_key=API_KEY, base_url=BASE_URL)
-
-# 3. 获取或创建数据集
-try:
-    datasets = rag_object.list_datasets(name=DATASET_NAME)
-    dataset = datasets[0]
-    print(f"数据集 '{DATASET_NAME}' 已存在，ID: {dataset.id}")
-except Exception as e:
-    dataset = rag_object.create_dataset(
-        name=DATASET_NAME, embedding_model=EMBEDDING_MODEL, chunk_method=CHUNK_METHOD
-    )
-    print(f"数据集 '{DATASET_NAME}' 创建成功，ID: {dataset.id}")
+# 2. 初始化 RAGFlow 客户端和数据集
+def initialize_ragflow(dataset_name):
+    try:
+        rag_object = RAGFlow(api_key=API_KEY, base_url=BASE_URL)
+        datasets = rag_object.list_datasets(name=dataset_name)
+        if datasets:
+            dataset = datasets[0]
+            print(f"数据集 '{dataset_name}' 已存在，ID: {dataset.id}")
+        else:
+            dataset = rag_object.create_dataset(
+                name=dataset_name,
+                embedding_model=EMBEDDING_MODEL,
+                chunk_method=CHUNK_METHOD,
+            )
+            print(f"数据集 '{dataset_name}' 创建成功，ID: {dataset.id}")
+        return rag_object, dataset
+    except Exception as e:
+        print(f"初始化 RAGFlow 客户端或数据集时出错: {e}")
+        return None, None
 
 
 # 4. 获取 RAGFlow 上已上传的文件名列表
-def get_uploaded_filenames_from_ragflow():
+def get_uploaded_filenames_from_ragflow(dataset):
     uploaded_filenames = set()
     try:
-        documents = dataset.list_documents()  # 获取 RAGFlow 上的所有文档
+        documents = dataset.list_documents(page_size=10000)  # 获取 RAGFlow 上的所有文档
         for doc in documents:
             uploaded_filenames.add(doc.name)  # 直接添加文件名
     except Exception as e:
@@ -50,13 +56,19 @@ def get_uploaded_filenames_from_ragflow():
 def upload_new_files():
     print("开始检查和上传新文件...")
 
-    # 获取 RAGFlow 上已上传的文件名列表
-    uploaded_filenames = get_uploaded_filenames_from_ragflow()
+    # 初始化 RAGFlow 客户端和数据集
+    rag_object, dataset = initialize_ragflow(DATASET_NAME)
+    if not dataset:
+        print("无法初始化 RAGFlow 客户端或数据集，跳过上传。")
+        return
 
     for root, _, files in os.walk(FOLDER_PATH):  # 使用 os.walk 递归遍历文件夹
         for filename in files:
             if filename.endswith(".pdf"):
                 file_path = os.path.join(root, filename)
+
+                # 获取 RAGFlow 上已上传的文件名列表 (每次循环都获取)
+                uploaded_filenames = get_uploaded_filenames_from_ragflow(dataset)
 
                 # (a) 检查文件名是否已上传
                 if filename in uploaded_filenames:
@@ -71,10 +83,9 @@ def upload_new_files():
                 try:
                     dataset.upload_documents([{"display_name": filename, "blob": blob}])
                     print(f"文件 '{filename}' 上传成功")
-                    uploaded_filenames.add(filename)  # 上传成功后，添加到文件名集合
 
                     # (d) 异步解析文档 (重点：上传后立即解析)
-                    documents = dataset.list_documents()
+                    documents = dataset.list_documents(page_size=10000)
                     documents = [doc for doc in documents if doc.name == filename]
                     if documents:
                         document_id = documents[0].id
