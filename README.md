@@ -4,6 +4,8 @@
 
 This project integrates the Zotero literature library as an external knowledge base for machine learning models utilizing Retrieval-Augmented Generation (RAG) technology, implemented through Python and Ragflow. It offers a robust solution for managing academic references, enabling users to effectively leverage their Zotero libraries in various applications. Key features include free access, duplicate removal, incremental processing, and automatic synchronization.
 
+For more details and video guidance, please refer to: [Video Guide](https://www.bilibili.com/video/BV1ntAaeRETC/?spm_id_from=333.1387.homepage.video_card.click&vd_source=baada489582bbf847a6a36dd00fff036)
+
 ## Features
 
 - **Free Access**: The method is open-source and free to use, making it accessible for researchers and developers alike.
